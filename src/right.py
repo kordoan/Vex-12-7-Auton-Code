@@ -1,5 +1,7 @@
+#consts
 PLACEHOLDER = 5
 DEGREESPLACEHOLDER = 50
+
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 # 	Module:       main.py                                                      #
@@ -14,24 +16,28 @@ from vex import *
 
 brain = Brain()
 controller = Controller()
-drive_train_intertial = Inertial(Ports.PORT19)
+drive_train_intertial = Inertial(Ports.PORT19) # intertial sensor
+
 # pneumatics
-e_brake = DigitalOut(brain.three_wire_port.a)
+e_brake = DigitalOut(brain.three_wire_port.a) # e brake wheel
+descorer = DigitalOut(brain.three_wire_port.b) 
 match_loader = DigitalOut(brain.three_wire_port.c)
 
-#distance
-distance_a = Distance(Ports.PORT10)
-distance_b = Distance(Ports.PORT11)
+#distance sensors
+distance_a = Distance(Ports.PORT10) # distance sensor top
+distance_b = Distance(Ports.PORT11) # distance sensor bottom
 
 # define motors
-intake_motor_top = Motor(Ports.PORT2, True) # top intake motor
-intake_motor_entrance = Motor(Ports.PORT3, True) # entrance intake motor
-outtake_motor = Motor(Ports.PORT4) # outtake
+intake_motor_entrance = Motor(Ports.PORT2, True) # entrance intake
+intake_motor_top = Motor(Ports.PORT4, True) # top intake
+outtake_motor = Motor(Ports.PORT6) # top outtake
 
+#drive train motors
 left_motor_a = Motor(Ports.PORT20, True) # left front motor
 left_motor_b = Motor(Ports.PORT10, True) # left back motor
 right_motor_a = Motor(Ports.PORT11) # right front motor
 right_motor_b = Motor(Ports.PORT1) # right back motor
+
 # define drive train
 left_motor_group = MotorGroup(left_motor_a, left_motor_b)
 right_motor_group = MotorGroup(right_motor_a, right_motor_b)
@@ -102,14 +108,16 @@ def autonomous():
 
     # route
     # start intake
+    intake()
     drive_train.drive_for(FORWARD, PLACEHOLDER, INCHES) # start forward
     drive_train.turn_for(LEFT, DEGREESPLACEHOLDER, DEGREES) # right 
     # stop intake
+    intake_stop()
     drive_train.drive_for(REVERSE, PLACEHOLDER,INCHES) # backwards align with goal
     drive_train.turn_for(LEFT, DEGREESPLACEHOLDER, DEGREES) # turn so output faces goal
     drive_train.drive_for(REVERSE, PLACEHOLDER, INCHES) # back into goal
     # start outtake
-
+    outtake()
     # if time + to column vvv
 
 def user_control():
@@ -129,12 +137,14 @@ def user_control():
             drive_train.turn(LEFT, -turn, VelocityUnits.PERCENT)
             brain.screen.print("turn LEFT\n")
         # button functions
-        controller.buttonR1.pressed(intake)
+        controller.buttonR1.pressed(intake) # can change buttons later
+        controller.buttonL1.pressed(outtake) # can change buttons later
 
         wait(20, MSEC)
-autonomous()
 # create competition instance
 comp = Competition(user_control, autonomous)
 
 # actions to do when the program starts
 brain.screen.clear_screen()
+
+autonomous() # remove at comp
