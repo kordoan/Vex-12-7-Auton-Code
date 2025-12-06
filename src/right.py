@@ -61,7 +61,7 @@ def entrance_intake_for_seconds(sec):
     entrance()
     wait(sec, SECONDS)
     entrance_stop()
-    
+
 def intake(): # start intake
     intake_motor_entrance.spin(FORWARD)
     while not distance_a.is_object_detected() and not distance_b.is_object_detected(): # while no blocks in top chamber spin the top motor
@@ -90,20 +90,45 @@ def outtake_for_seconds(sec): # outtake for sec SECONDS
     outtake_stop()
 
 def e_brake_down():
+    global e_brake_is_up
+
     e_brake.set(True)
     e_brake_is_up = False
 
 def e_brake_up():
+    global e_brake_is_up
+
     e_brake.set(False)
     e_brake_is_up = True
 
+def e_brake_toggle(): # for manual, map e brake to one button toggle
+    global e_brake_is_up
+
+    if e_brake_is_up:
+        e_brake_down()
+    else:
+        e_brake_up()
+
 def match_loader_up():
+    global match_loader_is_up
+
     match_loader.set(True)
     match_loader_is_up = True
 
 def match_loader_down():
+    global match_loader_is_up
+
     match_loader.set(False)
     match_loader_is_up = True
+
+def match_loader_toggle(): # for manual, map match loader to one button toggle
+    global match_loader_is_up
+
+    if match_loader_is_up:
+        match_loader_down()
+    else:
+        match_loader_up()
+
 
 # def descorer_up():
 #     descorer.set(True)
@@ -116,11 +141,13 @@ def match_loader_down():
 # main functions
 
 def pre_autonomous(): # runs before autonomous
+    e_brake_up()
+    match_loader_up()
+    
     # calibrate inertial
     drive_train_intertial.calibrate()
     while drive_train_intertial.is_calibrating():
         wait(50, MSEC)
-
 
 pre_autonomous()
 
@@ -165,28 +192,17 @@ def user_control():
             drive_train.turn(LEFT, -turn, VelocityUnits.PERCENT)
             brain.screen.print("turn LEFT\n")
         # button functions
-        if e_brake_is_up: # map e brake functions to one button
-            controller.buttonUp.pressed(e_brake_down)
-        elif not e_brake_is_up:
-            controller.buttonUp.pressed(e_brake_up)
+        controller.buttonLeft.pressed(e_brake_toggle)
+        controller.buttonDown.pressed(match_loader_toggle)
 
-        # if descorer_is_up:
-        #     controller.buttonL2.pressed(descorer_down)
-        # elif not descorer_is_up:
-        #     controller.buttonL2.pressed(descorer_up)
-
-        if match_loader_is_up: # map match loader functions to one button
-            controller.buttonDown.pressed(match_loader_down)
-        elif not e_brake_is_up:
-            controller.buttonDown.pressed(match_loader_up)
-
-        controller.buttonR2.pressed(entrance)
+        # intake/outtake motors
+        controller.buttonR2.pressed(entrance) # run only entrance motor
         controller.buttonR2.released(entrance_stop)
 
-        controller.buttonR1.pressed(intake)
+        controller.buttonR1.pressed(intake) # run both intake motors
         controller.buttonR1.released(intake_stop)
 
-        controller.buttonL1.pressed(outtake)
+        controller.buttonL1.pressed(outtake) # run all motors
         controller.buttonL1.released(outtake_stop)
 
 
